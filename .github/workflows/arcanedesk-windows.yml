@@ -1,8 +1,8 @@
 name: Build ArcaneDesk (Windows x64)
 
 # Build enxuto do ArcaneIV: só Windows x64, cliente flutter, artefato sem assinatura.
-# Injeta o servidor de rendezvous e a chave publica do ArcaneIV no config.rs em tempo de build
-# (a partir de secrets do repo — nada sensivel commitado). Marca completa vem numa iteracao seguinte.
+# Injeta o servidor de rendezvous, a chave publica e o nome do app (ArcaneDesk) no config.rs
+# em tempo de build (server/key vem de secrets — nada sensivel commitado).
 on:
   workflow_dispatch:
 
@@ -33,7 +33,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Customize ArcaneDesk (rendezvous + key)
+      - name: Customize ArcaneDesk (rendezvous + key + app name)
         shell: bash
         env:
           ARCANE_RS_SERVER: ${{ secrets.ARCANE_RS_SERVER }}
@@ -49,10 +49,12 @@ jobs:
                      'pub const RENDEZVOUS_SERVERS: &[&str] = &["%s"];' % srv, s, count=1)
           s = re.sub(r'pub const RS_PUB_KEY:.*',
                      'pub const RS_PUB_KEY: &str = "%s";' % key, s, count=1)
+          s = re.sub(r'RwLock::new\("RustDesk"\.to_owned\(\)\)',
+                     'RwLock::new("ArcaneDesk".to_owned())', s, count=1)
           open(p, 'w', encoding='utf-8').write(s)
-          print("config.rs patched (server injected)")
+          print("config.rs patched (server + key + ArcaneDesk name)")
           PY
-          grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY" libs/hbb_common/src/config.rs | head
+          grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY|APP_NAME" libs/hbb_common/src/config.rs | head
 
       - name: Restore bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
