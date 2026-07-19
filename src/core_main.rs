@@ -33,6 +33,15 @@ pub fn core_main() -> Option<Vec<String>> {
         return None;
     }
     crate::load_custom_client();
+    // ArcaneIV: variante "dispositivo gerenciado" (instalada silenciosamente
+    // pelo agente) — trava o client em modo so-recebe-conexao. A tela de
+    // "conectar em outro ID" ja se esconde sozinha quando isso e true
+    // (flutter/lib/desktop/pages/desktop_home_page.dart le is_incoming_only()).
+    #[cfg(feature = "managed_device")]
+    config::HARD_SETTINGS
+        .write()
+        .unwrap()
+        .insert("conn-type".to_owned(), "incoming".to_owned());
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process

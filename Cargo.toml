@@ -40,6 +40,12 @@ unix-file-copy-paste = [
     "clipboard/unix-file-copy-paste",
 ]
 screencapturekit = ["cpal/screencapturekit"]
+# ArcaneIV: variante "dispositivo gerenciado" — trava conn-type=incoming (so
+# pode ser acessado, nao pode iniciar conexao pra outra maquina). Mesma flag
+# HARD_SETTINGS que a config assinada custom.txt usaria, so que fixada em
+# tempo de compilacao (nao precisamos da chave privada de assinatura do
+# custom-client, que nao temos). Ver core_main.rs.
+managed_device = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

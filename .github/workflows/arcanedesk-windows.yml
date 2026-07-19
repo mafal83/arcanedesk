@@ -5,6 +5,12 @@ name: Build ArcaneDesk (Windows x64)
 # em tempo de build (server/key vem de secrets — nada sensivel commitado).
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: "technician = app completo (baixado pelo atendente); managed = so recebe conexao (instalado em silencio pelo agente)"
+        type: choice
+        options: [technician, managed]
+        default: technician
 
 env:
   RUST_VERSION: "1.75"
@@ -55,6 +61,20 @@ jobs:
           print("config.rs patched (server + key + ArcaneDesk name)")
           PY
           grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY|APP_NAME" libs/hbb_common/src/config.rs | head
+
+      - name: Enable managed_device feature (variante "dispositivo gerenciado")
+        if: ${{ inputs.variant == 'managed' }}
+        shell: bash
+        run: |
+          python3 - "Cargo.toml" <<'PY'
+          import sys, re
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          s = re.sub(r'default = \["use_dasp"\]', 'default = ["use_dasp", "managed_device"]', s, count=1)
+          open(p, 'w', encoding='utf-8').write(s)
+          print("Cargo.toml patched (managed_device ligado por default)")
+          PY
+          grep -n "^default" Cargo.toml
 
       - name: Restore bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -145,5 +165,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: arcanedesk-windows-x64
+          name: arcanedesk-windows-x64-${{ inputs.variant }}
           path: arcanedesk
